@@ -99,26 +99,41 @@ public class ProductController {
     }
 
 
-    //Clase interna para crear cuenta del tipo cuenta ahorro
-    public HashMap<String, Object> createCurrentAccount(@RequestBody Product new_product ){
+    //Clase interna para crear cuenta del tipo cuenta corriente
+    public HashMap<String, Object> createCurrentAccount(@RequestBody Product new_product, int cant_cuentas, String ClientType  ){
         HashMap<String, Object> map = new HashMap<>();
         try{
-            new_product.setMaintenanceCommission(0.0); 
-            map.put("account", new_product);
-            productRepo.save(new_product);
+            if(ClientType.equals("BUSINESS")){
+                map.put("mensaje", "Cuenta corriente no habilitada para empresas.");
+            }
+            else if(ClientType.equals("PERSON") && cant_cuentas == 0){
+                new_product.setMaintenanceCommission(0.0);                 
+                productRepo.save(new_product);
+                map.put("account", new_product);
+            }else{
+                map.put("mensaje", "El cliente ya tiene con cuenta corriente");
+            }
+
         }catch(Exception e) {
             e.printStackTrace();
             map.put("mensaje", "error");
         }                    
         return map;
     }
-    //Clase interna para crear cuenta del tipo cuenta corriente
-    public HashMap<String, Object> createSavingAccount(@RequestBody Product new_product ){
+    //Clase interna para crear cuenta del tipo cuenta ahorro
+    public HashMap<String, Object> createSavingAccount(@RequestBody Product new_product,  int cant_cuentas, String ClientType  ){
         HashMap<String, Object> map = new HashMap<>();
         try{
-            new_product.setMaximumTransactionLimit(0); 
-            map.put("account", new_product);
-            productRepo.save(new_product);
+            if(ClientType.equals("BUSINESS")){
+                map.put("mensaje", "Cuenta de ahorro no habilitada para empresas.");
+            }
+            else if(ClientType.equals("PERSON") && cant_cuentas == 0){
+                new_product.setMaximumTransactionLimit(0); 
+                productRepo.save(new_product);
+                map.put("account", new_product);
+            }else{
+                map.put("mensaje", "El cliente ya tiene con cuenta de ahorro");
+            }
         }catch(Exception e) {
             e.printStackTrace();
             map.put("mensaje", "error");
@@ -126,12 +141,17 @@ public class ProductController {
         return map;
     }    
     //Clase interna para crear cuenta del tipo cuenta plazo fijo
-    public HashMap<String, Object> createFixedTermAccount(@RequestBody Product new_product ){
+    public HashMap<String, Object> createFixedTermAccount(@RequestBody Product new_product, String ClientType ){
         HashMap<String, Object> map = new HashMap<>();
         try{
-            new_product.setMaintenanceCommission(0.0); 
-            map.put("account", new_product);
-            productRepo.save(new_product);
+            if(ClientType.equals("BUSINESS")){
+                map.put("mensaje", "Cuenta de plazo fijo no habilitada para empresas.");
+            }else{
+                new_product.setMaintenanceCommission(0.0); 
+                productRepo.save(new_product);
+                map.put("account", new_product);
+            }
+            
         }catch(Exception e) {
             e.printStackTrace();
             map.put("mensaje", "error");
@@ -155,27 +175,27 @@ public class ProductController {
             salida.put("message", "Id de cliente no encontrado");  
         }else{
             
-            String ClientType= (data_client.get("clientType")).toString();
-
+            String ClientType= (data_client.get("clientType")).toString();            
+            
             int cant_cuenta_ahorro= (int) data_client.get("cant_cuenta_ahorro");
-            int cant_cuenta_corriente= (int) data_client.get("clientType");
-            int cant_cuenta_plazo_fijo=(int) data_client.get("clientType");
+            int cant_cuenta_corriente= (int) data_client.get("cant_cuenta_corriente");
+            int cant_cuenta_plazo_fijo=(int) data_client.get("cant_cuenta_plazo_fijo");
 
             log.info("entro al else");
             String productType = new_product.getProductType();
             log.info(productType);
 
-            if(productType.equals("CURRENT_ACCOUNT")){
+            if(productType.equals("CURRENT_ACCOUNT" )){
                 log.info("1");
-                HashMap<String, Object> create_product_a = createCurrentAccount(  new_product );
+                HashMap<String, Object> create_product_a = createCurrentAccount(  new_product, cant_cuenta_corriente, ClientType );
                 salida.put("ouput", create_product_a);
             }else if(productType == "SAVING_ACCOUNT"){
                 log.info("2");
-                HashMap<String, Object> create_product_b = createSavingAccount(  new_product );
+                HashMap<String, Object> create_product_b = createSavingAccount(  new_product,  cant_cuenta_ahorro, ClientType);
                 salida.put("ouput", create_product_b);
             }else if(productType == "FIXED_TERM_ACCOUNT"){
                 log.info("3");
-                HashMap<String, Object> create_product_c = createFixedTermAccount(  new_product );
+                HashMap<String, Object> create_product_c = createFixedTermAccount(  new_product, ClientType );
                 salida.put("ouput", create_product_c);
             }
 
