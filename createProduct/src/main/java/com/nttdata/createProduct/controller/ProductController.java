@@ -89,6 +89,7 @@ public class ProductController {
             
             //Armar hashmap
             map.put("message", "Id de cliente encontrado");
+            map.put("IdClient", id);
             map.put("cant_cuenta_ahorro", Q_1);
             map.put("cant_cuenta_corriente", Q_2);
             map.put("cant_cuenta_plazo_fijo", Q_3);
@@ -158,7 +159,53 @@ public class ProductController {
         }                    
         return map;
     }
+    //Clase interna para crear creditos
+    public HashMap<String, Object> createCredit(@RequestBody Product new_product, String ClientType, String IdClient ){
+        HashMap<String, Object> map = new HashMap<>();
+        try{
+            List <Product> Products_1 = productRepo.findByProductTypeAndClientId("BUSINESS_CREDIT",IdClient);  
+            List <Product> Products_2 = productRepo.findByProductTypeAndClientId("PERSONAL_CREDIT",IdClient);  
 
+            if(ClientType.equals("BUSINESS") && Products_1.size() == 0){
+               new_product.setProductType("BUSINESS_CREDIT");
+               productRepo.save(new_product);
+               map.put("account", new_product);
+            }
+            else if(ClientType.equals("PERSON")&& Products_2.size() == 0){
+               new_product.setProductType("PERSONAL_CREDIT");
+               productRepo.save(new_product);
+               map.put("account", new_product);
+            }else{
+                map.put("mensaje", "El cliente ya tiene un producto de crédito habilitado."); 
+            }            
+            
+            
+        }catch(Exception e) {
+            e.printStackTrace();
+            map.put("mensaje", "error");
+        }                    
+        return map;
+    }
+    //Clase interna para crear una tarjeta de crédito
+    public HashMap<String, Object> createCreditCard(@RequestBody Product new_product, String ClientType, String IdClient ){
+        HashMap<String, Object> map = new HashMap<>();
+        try{
+            List <Product> Products_1 = productRepo.findByProductTypeAndClientId("CREDIT_CARD",IdClient);  
+
+            if(Products_1.size() == 0){
+               new_product.setProductType("BUSINESS_CREDIT");
+               productRepo.save(new_product);
+               map.put("account", new_product);
+            }else{
+                map.put("mensaje", "El cliente ya tiene una tarjeta de crédito habilitada."); 
+            }                 
+            
+        }catch(Exception e) {
+            e.printStackTrace();
+            map.put("mensaje", "error");
+        }                    
+        return map;
+    }    
 
     //Microservicio para crear cuentas
     @PostMapping("createProduct")
@@ -175,16 +222,18 @@ public class ProductController {
             salida.put("message", "Id de cliente no encontrado");  
         }else{
             
-            String ClientType= (data_client.get("clientType")).toString();            
+            String ClientType= (data_client.get("clientType")).toString();         
+            String IdClient= (data_client.get("IdClient")).toString();      
             
             int cant_cuenta_ahorro= (int) data_client.get("cant_cuenta_ahorro");
             int cant_cuenta_corriente= (int) data_client.get("cant_cuenta_corriente");
-            int cant_cuenta_plazo_fijo=(int) data_client.get("cant_cuenta_plazo_fijo");
+            //int cant_cuenta_plazo_fijo=(int) data_client.get("cant_cuenta_plazo_fijo");
 
             log.info("entro al else");
             String productType = new_product.getProductType();
             log.info(productType);
 
+            //Productos del tipo cuenta
             if(productType.equals("CURRENT_ACCOUNT" )){
                 log.info("1");
                 HashMap<String, Object> create_product_a = createCurrentAccount(  new_product, cant_cuenta_corriente, ClientType );
@@ -197,6 +246,16 @@ public class ProductController {
                 log.info("3");
                 HashMap<String, Object> create_product_c = createFixedTermAccount(  new_product, ClientType );
                 salida.put("ouput", create_product_c);
+            }
+            //Productos del tipo crédito
+            else if(productType == "BUSINESS_CREDIT" || productType == "PERSONAL_CREDIT"){
+                log.info("4");
+                HashMap<String, Object> create_product_d = createCredit(  new_product, ClientType, IdClient );
+                salida.put("ouput", create_product_d);
+            }else if(productType == "CREDIT_CARD"){
+                log.info("5");
+                HashMap<String, Object> create_product_e = createCreditCard(  new_product, ClientType, IdClient );
+                salida.put("ouput", create_product_e);
             }
 
         }  
