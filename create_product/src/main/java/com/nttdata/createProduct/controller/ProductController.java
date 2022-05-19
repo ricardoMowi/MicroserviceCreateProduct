@@ -127,6 +127,65 @@ public class ProductController {
         }                    
         return map;
     }
+
+    
+    //Clase interna para crear cuenta del tipo cuenta de ahorro VIP
+    public HashMap<String, Object> createSavingAccountVIP (@RequestBody Product new_product, String ClientType  ){
+        HashMap<String, Object> map = new HashMap<>();
+        try{
+            //Validar si tiene tarjeta de credito
+            List <Product> cards = productRepo.findByProductTypeAndClientId("CREDIT_CARD",new_product.getClientId());  
+            int cant_tarjetas = cards.size();
+
+            if(ClientType.equals("BUSINESS")){
+                map.put("mensaje", "Cuenta de ahorro VIP no habilitada para empresas.");
+            }else if(ClientType.equals("PERSON")){
+                if(cant_tarjetas == 0){
+                    map.put("mensaje", "El cliente no tiene tarjeta de crédito");
+                }
+                else{
+                    new_product.setMaintenanceCommission(0.0);                 
+                    productRepo.save(new_product);
+                    map.put("account", new_product);
+                }
+            }
+
+        }catch(Exception e) {
+            e.printStackTrace();
+            map.put("mensaje", "error");
+        }                    
+        return map;
+    }
+
+    //Clase interna para crear cuenta del tipo cuenta de ahorro VIP
+    public HashMap<String, Object> createCurrentAccountPYME (@RequestBody Product new_product, String ClientType  ){
+        HashMap<String, Object> map = new HashMap<>();
+        try{
+            //Validar si tiene tarjeta de credito
+            List <Product> Products = productRepo.findByProductTypeAndClientId("CREDIT_CARD",new_product.getClientId());  
+            int cant_tarjetas = Products.size();
+
+            if(ClientType.equals("PERSON")){
+                map.put("mensaje", "Cuenta corriente PYME no habilitada para personas.");
+            }else if(ClientType.equals("BUSINESS")){
+                if(cant_tarjetas == 0){
+                    map.put("mensaje", "El cliente no tiene tarjeta de crédito");
+                }
+                else{
+                    new_product.setMaintenanceCommission(0.0);                 
+                    productRepo.save(new_product);
+                    map.put("account", new_product);
+                }
+            }
+
+        }catch(Exception e) {
+            e.printStackTrace();
+            map.put("mensaje", "error");
+        }                    
+        return map;
+    }
+    
+            
     //Clase interna para crear cuenta del tipo cuenta corriente
     public HashMap<String, Object> createCurrentAccount(@RequestBody Product new_product,  int cant_cuentas, String ClientType  ){
         HashMap<String, Object> map = new HashMap<>();
@@ -254,6 +313,14 @@ public class ProductController {
             }else if(productType.equals("SAVING_ACCOUNT")){
                 log.info("2");
                 HashMap<String, Object> create_product_b = createSavingAccount(  new_product,  cant_cuenta_ahorro, ClientType);
+                salida.put("ouput", create_product_b);
+            }else if(productType.equals("SAVING_ACCOUNT_VIP")){
+                log.info("2");
+                HashMap<String, Object> create_product_b = createSavingAccountVIP(  new_product,   ClientType);
+                salida.put("ouput", create_product_b);
+            }else if(productType.equals("SAVING_ACCOUNT_VIP")){
+                log.info("2");
+                HashMap<String, Object> create_product_b = createCurrentAccountPYME(  new_product,   ClientType);
                 salida.put("ouput", create_product_b);
             }else if(productType.equals("FIXED_TERM_ACCOUNT")){
                 log.info("3");
