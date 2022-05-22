@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,6 +33,10 @@ public class ClientController {
 
     @Autowired
     private ClientRepository clientRepo;
+
+    //Variables
+    private static final String GET_ALL_SERVICE = "MC1";
+
     
     //CRUD
     @GetMapping(value = "/all")
@@ -41,6 +46,7 @@ public class ClientController {
     }  
 
     @GetMapping("getClient/{id}")
+    @CircuitBreaker(name = GET_ALL_SERVICE, fallbackMethod = "customerContactInfoFallback")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getClientData(@PathVariable("id") String id){
       Map<String, Object> salida = new HashMap<>();
@@ -84,5 +90,9 @@ public class ClientController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
     } 
+
+    public ResponseEntity<String> customerContactInfoFallback(Exception e) {
+      return new ResponseEntity<String>("GET: Client contact info endpoint is not available right now.", HttpStatus.OK);
+    }
 
 }
