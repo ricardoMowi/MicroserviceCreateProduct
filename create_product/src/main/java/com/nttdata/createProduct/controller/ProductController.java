@@ -1,6 +1,5 @@
 package com.nttdata.createProduct.controller;
 
-import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -304,6 +303,12 @@ public class ProductController {
             new_product.setCreationDate(date);
             //Asignar status
             new_product.setStatus("ACTIVE");
+            //Las cuentas bancarias tienen un monto mínimo de apertura que puede ser cero (0).
+            if(productType.equals("BUSINESS_CREDIT")==false && productType.equals("PERSONAL_CREDIT")==false && productType.equals("CREDIT_CARD")==false){
+                if(new_product.getAmount().isNaN()){
+                    new_product.setAmount(0.00);
+                }
+            }
 
             //Productos del tipo cuenta
             if(productType.equals("CURRENT_ACCOUNT" )){
