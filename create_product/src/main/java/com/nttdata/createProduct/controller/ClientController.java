@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,19 +36,22 @@ public class ClientController {
     private ClientRepository clientRepo;
 
     //Variables
-    private static final String GET_ALL_SERVICE = "MC1";
+    //private static final String GET_ALL_SERVICE = "MC1";
 
     
     //CRUD
     @GetMapping(value = "/all")
+    @TimeLimiter(name="createTime")
+    @CircuitBreaker(name="createCircuit")
     public List<Client> getAll() {
         log.info("lista todos");
         return clientService.getAll();
     }  
 
     @GetMapping("getClient/{id}")
-    @CircuitBreaker(name = GET_ALL_SERVICE, fallbackMethod = "customerContactInfoFallback")
     @ResponseBody
+    @TimeLimiter(name="consultTime")
+    @CircuitBreaker(name="consultCircuit")
     public ResponseEntity<Map<String, Object>> getClientData(@PathVariable("id") String id){
       Map<String, Object> salida = new HashMap<>();
       Optional<Client> client_doc = clientRepo.findById(id);
@@ -62,6 +66,8 @@ public class ClientController {
 
 
     @PostMapping(value = "/create")
+    @TimeLimiter(name="createTime")
+    @CircuitBreaker(name="createCircuit")
     public Client createClient(@RequestBody Client new_client){
         new_client.setStatus("ACTIVE");
         return clientService.createClient(new_client);
@@ -69,6 +75,8 @@ public class ClientController {
 
 
     @PutMapping("/update/{id}")
+    @TimeLimiter(name="createTime")
+    @CircuitBreaker(name="createCircuit")
     public ResponseEntity<Client> updateClient(@PathVariable("id") String id, @RequestBody Client temp) {
       Optional<Client> client = clientRepo.findById(id);
       if (client.isPresent()) {
@@ -80,6 +88,8 @@ public class ClientController {
     }
 
     @PutMapping("setInactive/{id}")
+    @TimeLimiter(name="createTime")
+    @CircuitBreaker(name="createCircuit")
     public ResponseEntity<Client> setInactive(@PathVariable("id") String id, @RequestBody Client temp_client) {
       Optional<Client> client_doc = clientRepo.findById(id);
       if (client_doc.isPresent()) {

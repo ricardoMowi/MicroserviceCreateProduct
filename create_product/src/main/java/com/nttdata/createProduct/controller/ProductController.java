@@ -11,6 +11,9 @@ import com.nttdata.createProduct.repository.ClientRepository;
 import com.nttdata.createProduct.repository.ProductRepository;
 import com.nttdata.createProduct.service.ProductService;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/product")
 public class ProductController {
+	
     @Autowired
     private ProductService productService;
     @Autowired
@@ -37,6 +41,9 @@ public class ProductController {
     private ClientRepository clientRepo;
     //CRUD
     @GetMapping(value = "/all")
+    @PostMapping(value = "/create")
+	@TimeLimiter(name="createTime")
+	@CircuitBreaker(name="createCircuit")
     public List<Product> getAll() {
         return productService.getAll();
     } 
@@ -48,6 +55,8 @@ public class ProductController {
     // }
 
     @PutMapping("/update/{id}")
+	@TimeLimiter(name="createTime")
+	@CircuitBreaker(name="createCircuit")
     public ResponseEntity<Product> updateProduct(@PathVariable("id") String id, @RequestBody Product temp) {
       Optional<Product> product = productRepo.findById(id);
       if (product.isPresent()) {
@@ -59,6 +68,8 @@ public class ProductController {
     }
 
     @PutMapping("setInactive/{id}")
+	@TimeLimiter(name="createTime")
+	@CircuitBreaker(name="createCircuit")
     public ResponseEntity<Product> setInactive(@PathVariable("id") String id) {
       Optional<Product> product_dov = productRepo.findById(id);
       if (product_dov.isPresent()) {
@@ -275,6 +286,8 @@ public class ProductController {
     //Microservicio para crear cuentas
     @PostMapping("createProduct")
     @ResponseBody
+	@TimeLimiter(name="createTime")
+	@CircuitBreaker(name="createCircuit")
     public ResponseEntity<Map<String, Object>> createProduct(@RequestBody Product new_product){
 
         log.info("entrando a método createProduct");
